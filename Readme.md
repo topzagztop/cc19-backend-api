@@ -308,3 +308,76 @@ router.get("/current-user", authCheck, authControllers.currentUser);
 module.exports = router;
 
 ```
+## Step 7 API user
+controllers/user-controllers.js
+```js
+const prisma = require("../config/prisma");
+
+exports.listUser = async (req, res, next) => {
+  try {
+    const users = await prisma.profile.findMany({
+      omit: {
+        password: true,
+      },
+    });
+
+    res.json({ result: users });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.updateRole = async (req, res, next) => {
+  try {
+    const { id, role } = req.body;
+
+    const updated = await prisma.profile.update({
+      where: { id: Number(id) },
+      data: { role: role },
+    });
+
+    res.json({ message: "Update Success" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.dateleUser = async (req, res, next) => {
+    try {
+        const { id } = req.body;
+
+        const deleted = await prisma.profile.delete({
+          where: {
+            id: Number(id),
+          },
+        });
+
+        res.json({message: "Delete Success"})
+        
+    } catch (error) {
+        next(error)
+    }
+}
+```
+routes/user-routes.js
+```js
+const express = require("express")
+const userControllers = require("../controllers/user-controllers")
+const { authCheck } = require("../middleware/auth-middleware");
+
+const router = express.Router()
+
+router.get("/users", authCheck, userControllers.listUser)
+router.patch("/user/update-role", authCheck, userControllers.updateRole)
+router.delete("user/:id", authCheck, userControllers.dateleUser)
+
+module.exports = router
+```
+index.js
+```js
+// import Routes
+const userRoutes = require("./routes/user-routes")
+
+// Routes
+app.use("/api", userRoutes)
+```
